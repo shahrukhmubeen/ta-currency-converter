@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 interface CurrencyResponse {
   data: Record<string, string>;
@@ -23,7 +24,7 @@ interface ConversionHistory {
   providedIn: 'root'
 })
 export class CurrencyService {
-  private apiUrl = 'https://ta-currency-converter-backend-node.vercel.app/api';
+  private apiUrl = environment.apiUrl;
   private loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
 
