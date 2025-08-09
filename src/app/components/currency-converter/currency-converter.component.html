@@ -1,0 +1,227 @@
+<!-- Mobile-First Currency Converter with Bootstrap & Angular Material -->
+
+<!-- TA Solutions Header -->
+<div class="bg-primary text-white py-2 mb-3">
+  <div class="container-fluid px-3">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center">
+        <i class="material-icons me-2">business</i>
+        <span class="fw-bold">TA Solutions</span>
+      </div>
+      <div class="d-flex align-items-center">
+        <i class="material-icons me-1" style="font-size: 1.2rem;">currency_exchange</i>
+        <span class="small">Currency Converter</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid px-3 py-4 main-content">
+    <!-- App Title Section -->
+    <div class="row justify-content-center mb-4">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="text-center mb-4">
+          <h2 class="display-6 fw-bold text-primary mb-2">
+            <i class="material-icons align-middle me-2" style="font-size: 2rem;">currency_exchange</i>
+            Currency Converter
+          </h2>
+          <p class="text-muted">Convert currencies in real-time with live exchange rates</p>
+        </div>
+      </div>
+    </div>
+
+  <!-- Main Converter Card -->
+  <div class="row justify-content-center mb-4">
+    <div class="col-12 col-md-8 col-lg-6">
+      <mat-card class="converter-card shadow-lg">
+        <mat-card-header class="pb-3">
+          <mat-card-title class="text-center w-100">
+            <i class="material-icons text-primary me-2">swap_horiz</i>
+            Convert Currency
+          </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <!-- Loading State -->
+          <div *ngIf="currencies.length === 0" class="text-center py-4">
+            <mat-spinner diameter="40" class="mx-auto mb-3"></mat-spinner>
+            <p class="text-muted">Loading currencies...</p>
+          </div>
+
+          <!-- Converter Form -->
+          <form [formGroup]="converterForm" (ngSubmit)="onConvert()" *ngIf="currencies.length > 0">
+            <div class="row g-3">
+              <!-- From Currency -->
+              <div class="col-12 col-sm-6">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>
+                    <i class="material-icons align-middle me-1" style="font-size: 1rem;">trending_up</i>
+                    From Currency
+                  </mat-label>
+                  <mat-select formControlName="fromCurrency">
+                    <mat-option *ngFor="let currency of currencies" [value]="currency">
+                      {{ currency }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="converterForm.get('fromCurrency')?.hasError('required')">
+                    Please select a currency
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <!-- To Currency -->
+              <div class="col-12 col-sm-6">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>
+                    <i class="material-icons align-middle me-1" style="font-size: 1rem;">trending_down</i>
+                    To Currency
+                  </mat-label>
+                  <mat-select formControlName="toCurrency">
+                    <mat-option *ngFor="let currency of currencies" [value]="currency">
+                      {{ currency }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="converterForm.get('toCurrency')?.hasError('required')">
+                    Please select a currency
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <!-- Amount -->
+              <div class="col-12">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>
+                    <i class="material-icons align-middle me-1" style="font-size: 1rem;">attach_money</i>
+                    Amount
+                  </mat-label>
+                  <input matInput type="number" formControlName="amount" placeholder="Enter amount" min="0" step="0.01">
+                  <mat-error *ngIf="converterForm.get('amount')?.hasError('required')">
+                    Amount is required
+                  </mat-error>
+                  <mat-error *ngIf="converterForm.get('amount')?.hasError('min')">
+                    Amount must be greater than 0
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <!-- Convert Button -->
+              <div class="col-12 text-center">
+                <button mat-raised-button color="primary" type="submit" class="btn-convert px-4 py-2"
+                  [disabled]="converterForm.invalid || loading">
+
+                  <span *ngIf="loading" class="d-flex align-items-center">
+                    <mat-spinner diameter="20" class="me-2"></mat-spinner>
+                    Converting...
+                  </span>
+
+                  <span *ngIf="!loading" class="d-flex align-items-center">
+                    <i class="material-icons me-2">currency_exchange</i>
+                    Convert Currency
+                  </span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Result Section -->
+  <div class="row justify-content-center mb-4" *ngIf="result !== null">
+    <div class="col-12 col-md-8 col-lg-6">
+      <mat-card class="result-card shadow-lg border-success">
+        <mat-card-content class="text-center py-4">
+          <div class="result-display">
+            <h3 class="text-success mb-3">
+              <i class="material-icons align-middle me-2">check_circle</i>
+              Conversion Result
+            </h3>
+            <div class="conversion-result">
+              <div class="from-amount mb-2">
+                <span class="amount-value">{{ amount | number:'1.2-2' }}</span>
+                <span class="currency-code badge bg-primary ms-2">{{ fromCurrency }}</span>
+              </div>
+              <div class="conversion-arrow mb-2">
+                <i class="material-icons text-muted" style="font-size: 2rem;">arrow_downward</i>
+              </div>
+              <div class="to-amount">
+                <span class="amount-value text-success fw-bold">{{ result | number:'1.2-2' }}</span>
+                <span class="currency-code badge bg-success ms-2">{{ toCurrency }}</span>
+              </div>
+            </div>
+            <small class="text-muted mt-3 d-block">
+              <i class="material-icons align-middle me-1" style="font-size: 1rem;">schedule</i>
+              Just converted
+            </small>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- History Section -->
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <mat-card class="history-card shadow-lg">
+        <mat-card-header class="pb-3">
+          <mat-card-title class="w-100 d-flex align-items-center justify-content-between">
+            <span>
+              <i class="material-icons text-primary me-2">history</i>
+              Conversion History
+            </span>
+            <span class="badge bg-secondary" *ngIf="history.length > 0">{{ history.length }}</span>
+          </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <!-- Empty History State -->
+          <div *ngIf="history.length === 0" class="text-center py-4">
+            <i class="material-icons text-muted mb-3" style="font-size: 3rem;">history_toggle_off</i>
+            <p class="text-muted">No conversion history yet</p>
+            <small class="text-muted">Your conversion history will appear here</small>
+          </div>
+
+          <!-- History List -->
+          <div class="history-list" *ngIf="history.length > 0">
+            <div class="row g-3">
+              <div class="col-12 col-md-6" *ngFor="let item of history; let i = index">
+                <div class="history-item p-3 border rounded bg-light">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="conversion-info flex-grow-1">
+                      <div class="conversion-line">
+                        <span class="fw-bold">{{ item.amount | number:'1.2-2' }}</span>
+                        <span class="badge bg-primary mx-2">{{ item.fromCurrency }}</span>
+                        <i class="material-icons align-middle mx-1" style="font-size: 1rem;">arrow_forward</i>
+                        <span class="fw-bold text-success">{{ item.result | number:'1.2-2' }}</span>
+                        <span class="badge bg-success ms-2">{{ item.toCurrency }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="timestamp-info">
+                    <small class="text-muted">
+                      <i class="material-icons align-middle me-1" style="font-size: 0.9rem;">access_time</i>
+                      {{ item.timestamp | date:'medium' }}
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Footer Section -->
+  <div class="row justify-content-center mt-5">
+    <div class="col-12">
+      <footer class="text-center py-4 border-top">
+        <p class="text-muted mb-0">
+          <i class="material-icons align-middle me-1" style="font-size: 1rem;">copyright</i>
+          {{ currentYear }} TA Solutions. All rights reserved.
+        </p>
+      </footer>
+    </div>
+  </div>
+</div>
