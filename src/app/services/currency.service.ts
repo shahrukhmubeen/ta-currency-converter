@@ -23,13 +23,14 @@ interface ConversionHistory {
   providedIn: 'root'
 })
 export class CurrencyService {
+  private apiUrl = 'https://ta-currency-converter-backend-node.vercel.app/api';
   private loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
   getCurrencies(): Observable<string[]> {
-    return this.http.get<CurrencyResponse>('http://localhost:3000/api/currencies')
+    return this.http.get<CurrencyResponse>(`${this.apiUrl}/currencies`)
       .pipe(
         map(response => Object.keys(response.data)),
         tap(() => this.loadingSubject.next(false)),
@@ -43,7 +44,7 @@ export class CurrencyService {
   convertCurrency(from: string, to: string, amount: number): Observable<number> {
     this.loadingSubject.next(true);
     return this.http.post<ConversionResponse>(
-      'http://localhost:3000/api/convert',
+      `${this.apiUrl}/convert`,
       { from, to, amount }
     ).pipe(
       map(response => response.result),
@@ -56,6 +57,6 @@ export class CurrencyService {
   }
 
   getConversionHistory(): Observable<ConversionHistory[]> {
-    return this.http.get<ConversionHistory[]>('http://localhost:3000/api/history');
+    return this.http.get<ConversionHistory[]>(`${this.apiUrl}/history`);
   }
 }
