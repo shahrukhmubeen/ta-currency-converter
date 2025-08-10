@@ -10,6 +10,8 @@ interface CurrencyResponse {
 
 interface ConversionResponse {
   result: number;
+  exchangeRate: number;
+  timestamp: string;
 }
 
 interface ConversionHistory {
@@ -17,6 +19,7 @@ interface ConversionHistory {
   toCurrency: string;
   amount: number;
   result: number;
+  exchangeRate: number;
   timestamp: string;
 }
 
@@ -42,13 +45,27 @@ export class CurrencyService {
       );
   }
 
-  convertCurrency(from: string, to: string, amount: number): Observable<number> {
+  convertCurrency(fromCurrency: string, toCurrency: string, amount: number): Observable<number> {
     this.loadingSubject.next(true);
-    return this.http.post<ConversionResponse>(
-      `${this.apiUrl}/convert`,
-      { from, to, amount }
-    ).pipe(
-      map(response => response.result),
+    
+    return this.http.post<ConversionResponse>(`${this.apiUrl}/convert`, {
+      from: fromCurrency,
+      to: toCurrency,
+      amount: amount
+    }).pipe(
+      map(response => {
+        // Save to localStorage
+        this.saveConversionToHistory({
+          fromCurrency,
+          toCurrency,
+          amount,
+          result: response.result,
+          exchangeRate: response.exchangeRate,
+          timestamp: response.timestamp
+        });
+        
+        return response.result;
+      }),
       tap(() => this.loadingSubject.next(false)),
       catchError(error => {
         this.loadingSubject.next(false);
@@ -58,6 +75,38 @@ export class CurrencyService {
   }
 
   getConversionHistory(): Observable<ConversionHistory[]> {
-    return this.http.get<ConversionHistory[]>(`${this.apiUrl}/history`);
+    // Get history from localStorage instead of backend
+    const history = this.getHistoryFromLocalStorage();
+    return new Observable(observer => {
+      observer.next(history);
+      observer.complete();
+    });
+  }
+
+  private saveConversionToHistory(conversion: ConversionHistory): void {
+    const history = this.getHistoryFromLocalStorage();
+    
+    // Add new conversion to the beginning of the array
+    history.unshift(conversion);
+    
+    // Keep only the last 10 conversions
+    const limitedHistory = history.slice(0, 10);
+    
+    // Save back to localStorage
+    localStorage.setItem('conversionHistory', JSON.stringify(limitedHistory));
+  }
+
+  private getHistoryFromLocalStorage(): ConversionHistory[] {
+    try {
+      const historyJson = localStorage.getItem('conversionHistory');
+      return historyJson ? JSON.parse(historyJson) : [];
+    } catch (error) {
+      console.error('Error parsing conversion history from localStorage:', error);
+      return [];
+    }
+  }
+
+  clearHistory(): void {
+    localStorage.removeItem('conversionHistory');
   }
 }
